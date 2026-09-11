@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SERP Snippet Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Arial&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f6fb; --surface:#ffffff; --surface-2:#eef1fa; --surface-3:#e0e5f3;
+    --ink:#1a1f2e; --ink-muted:#545e72; --ink-faint:#8890a0;
+    --accent:#23386f; --accent-contrast:#ffffff; --accent-tint:#e8eef7; --accent-tint-ink:#1b2c57;
+    --accent-grad-start:#23386f; --accent-grad-end:#4590a5;
+    --danger:#a3453a; --danger-tint:#f5e3e0;
+    --warn:#8a6d1c; --warn-tint:#f5efd9;
+    --good:#1c7a52; --good-tint:#e0f2e9;
+    --shadow: 0 1px 2px rgba(26,31,46,.06), 0 8px 24px rgba(26,31,46,.06);
+    --page-bg: linear-gradient(165deg, #fefeff 0%, #eef1fb 38%, #dde3f0 100%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b0f1a; --surface:#121728; --surface-2:#182036; --surface-3:#202b47;
+      --ink:#e8ecf7; --ink-muted:#a8b2c7; --ink-faint:#6e7890;
+      --accent:#6fb6ce; --accent-contrast:#08131c; --accent-tint:#15283a; --accent-tint-ink:#a9e0ef;
+      --accent-grad-start:#3a5a9e; --accent-grad-end:#5fd1e8;
+      --danger:#e2897c; --danger-tint:#3a2320;
+      --warn:#e6c766; --warn-tint:#332c14;
+      --good:#7ad4a8; --good-tint:#173226;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --page-bg: linear-gradient(165deg, #0b0f1a 0%, #0e1424 50%, #0b0f1a 100%);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0f1a; --surface:#121728; --surface-2:#182036; --surface-3:#202b47;
+    --ink:#e8ecf7; --ink-muted:#a8b2c7; --ink-faint:#6e7890;
+    --accent:#6fb6ce; --accent-contrast:#08131c; --accent-tint:#15283a; --accent-tint-ink:#a9e0ef;
+    --accent-grad-start:#3a5a9e; --accent-grad-end:#5fd1e8;
+    --danger:#e2897c; --danger-tint:#3a2320;
+    --warn:#e6c766; --warn-tint:#332c14;
+    --good:#7ad4a8; --good-tint:#173226;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --page-bg: linear-gradient(165deg, #0b0f1a 0%, #0e1424 50%, #0b0f1a 100%);
+  }
+  *{box-sizing:border-box;}
+  html{ background:var(--page-bg); }
+  body{
+    margin:0; min-height:100vh; color:var(--ink);
+    background:var(--page-bg);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1320px; margin:0 auto; padding:28px 20px 64px; }
+
+  .layout{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:20px; align-items:start; }
+  .col-right{ position:sticky; top:20px; }
+  @media (max-width:960px){
+    .layout{ grid-template-columns:1fr; }
+    .col-right{ position:static; }
+  }
+
+  header.top{ display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:18px; }
+  header.top h1{ font-family:'Archivo', sans-serif; font-size:22px; margin:0; }
+  header.top .tagline{ font-size:13px; color:var(--ink-muted); margin-top:4px; }
+
+  h2,h3{ font-family:'Archivo', sans-serif; margin:0; }
+  .panel{ background:var(--surface); border-radius:14px; padding:22px; box-shadow:var(--shadow); margin-bottom:20px; }
+  .panel h2{ font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin-bottom:6px; font-weight:700; }
+  .panel .sub{ font-size:13px; color:var(--ink-faint); margin-bottom:16px; }
+
+  label{ display:block; font-size:13px; font-weight:600; color:var(--ink-muted); margin-bottom:6px; }
+  input[type="text"], textarea, select{
+    width:100%; padding:10px 12px; border-radius:9px; border:none;
+    background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; font-size:14px;
+    outline:none; transition:box-shadow .15s;
+  }
+  textarea{ resize:vertical; min-height:56px; }
+  input:focus, textarea:focus{ box-shadow:0 0 0 2px var(--accent-tint), 0 0 0 3.5px var(--accent); }
+  .field{ margin-bottom:16px; }
+  .field .field-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .field .field-head label{ margin-bottom:0; }
+  .field .count{ font-size:11.5px; color:var(--ink-faint); font-family:'IBM Plex Mono', monospace; white-space:nowrap; }
+  .field .hint{ font-size:11.5px; color:var(--ink-faint); margin-top:4px; }
+
+  /* pixel budget meters */
+  .meters{ display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+  .meter{ flex:1; min-width:140px; }
+  .meter .meter-label{ display:flex; justify-content:space-between; font-size:11px; color:var(--ink-faint); margin-bottom:4px; font-family:'IBM Plex Mono', monospace; }
+  .meter-track{ height:6px; border-radius:4px; background:var(--surface-3); overflow:hidden; }
+  .meter-fill{ height:100%; border-radius:4px; background:var(--good); transition:width .15s, background .15s; }
+  .meter-fill.warn{ background:var(--warn); }
+  .meter-fill.over{ background:var(--danger); }
+
+  .btn{
+    appearance:none; border:none; border-radius:10px; padding:11px 18px; font-size:14px;
+    font-weight:700; cursor:pointer; font-family:'IBM Plex Sans', sans-serif; display:inline-flex;
+    align-items:center; gap:8px; transition:opacity .12s; white-space:nowrap; text-decoration:none;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.primary{ background:linear-gradient(135deg, var(--accent-grad-start), var(--accent-grad-end)); color:var(--accent-contrast); }
+  .btn.primary:hover{ opacity:.92; }
+  .btn.ghost{ background:var(--surface-2); color:var(--ink-muted); }
+  .btn.ghost:hover{ color:var(--ink); }
+  .btn.small{ padding:7px 13px; font-size:12.5px; border-radius:8px; }
+  .btn[disabled]{ opacity:.45; cursor:not-allowed; }
+
+  .row-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+
+  /* device toggle */
+  .device-toggle{ display:inline-flex; background:var(--surface-2); border-radius:10px; padding:4px; gap:2px; }
+  .device-toggle button{
+    appearance:none; border:none; background:none; padding:8px 16px; border-radius:8px; font-size:13px;
+    font-weight:700; color:var(--ink-muted); cursor:pointer; font-family:'IBM Plex Sans', sans-serif;
+  }
+  .device-toggle button.active{ background:linear-gradient(135deg, var(--accent-grad-start), var(--accent-grad-end)); color:var(--accent-contrast); }
+
+  /* SERP mock */
+  .serp-mock{
+    background:#ffffff; border-radius:12px; padding:20px; font-family:arial,sans-serif;
+    max-width:100%; margin-top:16px; transition:max-width .15s;
+  }
+  .serp-mock.mobile{ max-width:380px; margin-left:auto; margin-right:auto; padding:16px 14px; }
+  .serp-row{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .serp-favicon{ width:22px; height:22px; border-radius:50%; flex:none; background:#e3e6ea; object-fit:cover; }
+  .serp-sitecol{ display:flex; flex-direction:column; line-height:1.3; min-width:0; }
+  .serp-sitename{ font-size:14px; color:#202124; font-weight:400; }
+  .serp-breadcrumb{ font-size:12px; color:#4d5156; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .serp-mock.mobile .serp-sitename{ font-size:13px; }
+  .serp-title{ font-size:20px; line-height:1.3; color:#1a0dab; margin:2px 0 3px; font-family:arial,sans-serif; word-break:break-word; }
+  .serp-mock.mobile .serp-title{ font-size:18px; }
+  .serp-desc{ font-size:14px; line-height:1.58; color:#4d5156; word-break:break-word; }
+  .serp-overflow{ color:#b7bcc4; text-decoration:line-through; text-decoration-color:#d9dce2; }
+  .serp-ellipsis-mark{ color:#9aa0ab; }
+  .serp-empty{ color:#9aa0ab; font-style:italic; }
+  .serp-mock b{ font-weight:700; color:inherit; }
+  .serp-title b{ color:#1a0dab; }
+
+  .msg{ margin-top:12px; padding:10px 13px; border-radius:9px; font-size:12.5px; }
+  .msg.warn{ background:var(--warn-tint); color:var(--warn); }
+  .msg.good{ background:var(--good-tint); color:var(--good); font-weight:600; }
+
+  /* checklist */
+  .check-list{ display:flex; flex-direction:column; gap:8px; }
+  .check-row{ display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px; background:var(--surface-2); }
+  .check-row .mark{
+    flex:none; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; margin-top:1px;
+  }
+  .check-row.pass .mark{ background:var(--good-tint); color:var(--good); }
+  .check-row.fail .mark{ background:var(--danger-tint); color:var(--danger); }
+  .check-row.info .mark{ background:var(--surface-3); color:var(--ink-faint); }
+  .check-row .label{ font-size:13px; font-weight:600; color:var(--ink); }
+  .check-row .detail{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  .score-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px;
+    border-radius:12px; background:var(--accent-tint); color:var(--accent-tint-ink); margin-bottom:14px;
+  }
+  .score-banner .score-num{ font-family:'Archivo', sans-serif; font-size:24px; font-weight:800; }
+  .score-banner .score-label{ font-size:12.5px; font-weight:600; }
+
+  /* variants */
+  .variant-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .variant-card{ background:var(--surface-2); border-radius:12px; padding:14px; }
+  .variant-card .variant-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:8px; }
+  .variant-card .variant-name{ font-weight:700; font-size:13px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .variant-card .variant-actions{ display:flex; gap:6px; flex:none; }
+  .variant-card .variant-actions button{
+    appearance:none; border:none; background:var(--surface-3); color:var(--ink-muted); border-radius:7px;
+    width:24px; height:24px; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;
+  }
+  .variant-card .variant-actions button:hover{ color:var(--ink); }
+  .variant-card .serp-mock{ margin-top:0; padding:14px; transform:scale(1); }
+  .empty-state{ text-align:center; padding:30px 20px; color:var(--ink-faint); font-size:13.5px; }
+
+  footer.note{ font-size:12px; color:var(--ink-faint); line-height:1.6; margin-top:26px; text-align:center; }
+  footer.note a{ color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>SERP Snippet Studio</h1>
+      <div class="tagline">Write, preview and score your Google search snippet — wired to your real URL and favicon.</div>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <div class="col-left">
+
+      <section class="panel">
+        <h2>Your page details</h2>
+        <div class="sub">The URL drives the breadcrumb and favicon below — nothing here is faked.</div>
+
+        <div class="field">
+          <label>Page URL</label>
+          <input type="text" id="url" placeholder="https://mohitsseotraining.com/seo-training-course/">
+        </div>
+
+        <div class="field">
+          <label>Site name</label>
+          <input type="text" id="siteName" placeholder="Mohit's SEO Training">
+        </div>
+
+        <div class="field">
+          <label>Focus keyword <span style="font-weight:400; color:var(--ink-faint);">(optional — bolds matches &amp; powers the score checks)</span></label>
+          <input type="text" id="keyword" placeholder="seo training course">
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label>Title tag</label>
+            <span class="count" id="titleCount">0 chars</span>
+          </div>
+          <textarea id="title" placeholder="Advanced SEO Training Course in India | Mohit's SEO Training"></textarea>
+          <div class="meters">
+            <div class="meter">
+              <div class="meter-label"><span>Desktop</span><span id="titleDesktopPx">0 / 600px</span></div>
+              <div class="meter-track"><div class="meter-fill" id="titleDesktopFill"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label"><span>Mobile</span><span id="titleMobilePx">0 / 600px</span></div>
+              <div class="meter-track"><div class="meter-fill" id="titleMobileFill"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label>Meta description</label>
+            <span class="count" id="descCount">0 chars</span>
+          </div>
+          <textarea id="description" placeholder="Learn technical SEO, keyword research and link building from a 10+ year practitioner. Enroll in the course and start ranking on page 1." style="min-height:80px;"></textarea>
+          <div class="meters">
+            <div class="meter">
+              <div class="meter-label"><span>Desktop</span><span id="descDesktopPx">0 / 960px</span></div>
+              <div class="meter-track"><div class="meter-fill" id="descDesktopFill"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label"><span>Mobile</span><span id="descMobilePx">0 / 680px</span></div>
+              <div class="meter-track"><div class="meter-fill" id="descMobileFill"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-actions">
+          <button class="btn ghost small" id="copyMetaBtn" type="button">Copy Meta Tags</button>
+          <button class="btn ghost small" id="resetBtn" type="button">Reset Everything</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Snippet score</h2>
+        <div class="sub">Rule-based checks — not a decorative heatmap.</div>
+        <div class="score-banner">
+          <div>
+            <div class="score-label">Checks passed</div>
+            <div class="score-num" id="scoreNum">0 / 0</div>
+          </div>
+        </div>
+        <div class="check-list" id="checkList"></div>
+      </section>
+
+    </div>
+
+    <div class="col-right">
+
+      <section class="panel">
+        <h2>Google preview</h2>
+        <div class="sub">Truncated text is shown crossed out — exactly what Google would cut, not just a number.</div>
+        <div class="device-toggle" id="deviceToggle">
+          <button type="button" data-device="desktop" class="active">Desktop</button>
+          <button type="button" data-device="mobile">Mobile</button>
+        </div>
+        <div class="serp-mock" id="serpMock">
+          <div class="serp-row">
+            <img class="serp-favicon" id="serpFavicon" alt="">
+            <div class="serp-sitecol">
+              <span class="serp-sitename" id="serpSitename">Your Site Name</span>
+              <span class="serp-breadcrumb" id="serpBreadcrumb">example.com</span>
+            </div>
+          </div>
+          <div class="serp-title" id="serpTitle">Your title tag will appear here</div>
+          <div class="serp-desc" id="serpDesc">Your meta description will appear here.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Compare variants</h2>
+        <div class="sub">Save a few title/description combos and see them side by side.</div>
+        <button class="btn primary small" id="saveVariantBtn" type="button">+ Save Current as Variant</button>
+        <div style="margin-top:16px;">
+          <div class="variant-grid" id="variantGrid"></div>
+          <div class="empty-state" id="variantEmpty">No variants saved yet — write a version above, then save it to compare.</div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <footer class="note">
+    Everything runs in your browser and is saved only to this browser's local storage — nothing is sent anywhere, and there's no signup wall on any feature. The breadcrumb, favicon and pixel-truncation are computed live from what you type, not hardcoded placeholders.
+    <br>Mohit's SEO Training · SERP Snippet Studio
+  </footer>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+function $(id){ return document.getElementById(id); }
+
+var PX = {
+  titleDesktop: 600,
+  titleMobile: 600,
+  descDesktop: 960,
+  descMobile: 680
+};
+
+var CTA_WORDS = ["learn","discover","get","try","shop","buy","download","start","join","free",
+  "sign up","signup","book","compare","find out","explore","see","read","watch","claim","save",
+  "unlock","upgrade","request","register","subscribe","order now","call","contact"];
+
+var state = {
+  url: "", siteName: "", keyword: "", title: "", description: "",
+  device: "desktop", variants: []
+};
+
+function load(){
+  try{
+    var raw = localStorage.getItem("serpstudio.state");
+    if (raw){
+      var d = JSON.parse(raw);
+      state.url = d.url || "";
+      state.siteName = d.siteName || "";
+      state.keyword = d.keyword || "";
+      state.title = d.title || "";
+      state.description = d.description || "";
+      state.variants = Array.isArray(d.variants) ? d.variants : [];
+    }
+  }catch(e){}
+}
+function save(){
+  try{
+    localStorage.setItem("serpstudio.state", JSON.stringify({
+      url:state.url, siteName:state.siteName, keyword:state.keyword,
+      title:state.title, description:state.description, variants:state.variants
+    }));
+  }catch(e){}
+}
+
+/* ---------- pixel measurement ---------- */
+var canvas = document.createElement("canvas");
+var ctx = canvas.getContext("2d");
+function measure(text, font){
+  ctx.font = font;
+  return ctx.measureText(text).width;
+}
+// Largest prefix (plus an ellipsis) that fits maxWidth. Returns {cut, truncated}.
+function cutoffIndex(text, font, maxWidth){
+  if (!text) return { cut: 0, truncated:false };
+  if (measure(text, font) <= maxWidth) return { cut: text.length, truncated:false };
+  var lo = 0, hi = text.length;
+  while (lo < hi){
+    var mid = Math.ceil((lo + hi) / 2);
+    if (measure(text.slice(0, mid) + "…", font) <= maxWidth) lo = mid; else hi = mid - 1;
+  }
+  return { cut: lo, truncated:true };
+}
+
+function escapeHtml(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function boldKeyword(html, keyword){
+  if (!keyword) return html;
+  var esc = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!esc) return html;
+  var re = new RegExp("(" + esc.split(/\s+/).join("|") + ")", "gi");
+  return html.replace(re, "<b>$1</b>");
+}
+
+// Render text into a preview node, greying out + strike-through the part Google would clip,
+// with keyword bolding applied only to the kept portion.
+function renderClipped(el, text, font, maxWidth, keyword){
+  if (!text){ el.innerHTML = ""; return false; }
+  var r = cutoffIndex(text, font, maxWidth);
+  var kept = text.slice(0, r.cut);
+  var rest = text.slice(r.cut);
+  var html = boldKeyword(escapeHtml(kept), keyword);
+  if (r.truncated){
+    html += "<span class='serp-ellipsis-mark'>…</span>" +
+            "<span class='serp-overflow'>" + escapeHtml(rest) + "</span>";
+  }
+  el.innerHTML = html;
+  return r.truncated;
+}
+
+/* ---------- URL parsing: breadcrumb + favicon ---------- */
+function normalizeUrl(raw){
+  if (!raw) return null;
+  var s = raw.trim();
+  if (!/^https?:\/\//i.test(s)) s = "https://" + s;
+  try{ return new URL(s); }catch(e){ return null; }
+}
+function humanizeSegment(seg){
+  seg = decodeURIComponent(seg || "");
+  seg = seg.replace(/\.(html?|php|aspx?|jsp)$/i, "");
+  seg = seg.replace(/[-_]+/g, " ").trim();
+  if (!seg) return "";
+  return seg.split(" ").map(function(w){
+    return w ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+  }).join(" ");
+}
+function faviconUrl(hostname){
+  return "https://www.google.com/s2/favicons?sz=64&domain=" + encodeURIComponent(hostname);
+}
+
+/* ---------- checklist ---------- */
+function wordOverlapRatio(a, b){
+  function words(s){ return (s.toLowerCase().match(/[a-z0-9]+/g) || []); }
+  var wa = words(a), wb = words(b);
+  if (!wa.length || !wb.length) return 0;
+  var setB = {}; wb.forEach(function(w){ setB[w] = true; });
+  var shared = wa.filter(function(w){ return setB[w]; }).length;
+  return shared / Math.min(wa.length, wb.length);
+}
+
+function computeChecks(){
+  var title = state.title.trim();
+  var desc = state.description.trim();
+  var kw = state.keyword.trim();
+  var checks = [];
+
+  checks.push({ id:"title-present", label:"Title tag is filled in", pass: !!title,
+    detail: title ? "Title has " + title.length + " characters." : "Add a title tag above." });
+
+  var titleFits = cutoffIndex(title, "20px arial", PX.titleDesktop).truncated === false;
+  checks.push({ id:"title-fits", label:"Title fits without truncation (desktop)", pass: !!title && titleFits,
+    detail: title ? (titleFits ? "Fits within " + PX.titleDesktop + "px." : "Google would cut this title — shorten it.") : "—" });
+
+  checks.push({ id:"desc-present", label:"Meta description is filled in", pass: !!desc,
+    detail: desc ? "Description has " + desc.length + " characters." : "Add a meta description above." });
+
+  var descFits = cutoffIndex(desc, "14px arial", PX.descDesktop).truncated === false;
+  checks.push({ id:"desc-fits", label:"Description fits without truncation (desktop)", pass: !!desc && descFits,
+    detail: desc ? (descFits ? "Fits within " + PX.descDesktop + "px." : "Google would cut this description — shorten it.") : "—" });
+
+  if (kw){
+    var titleHasKw = title.toLowerCase().indexOf(kw.toLowerCase()) > -1;
+    checks.push({ id:"kw-in-title", label:"Focus keyword appears in the title", pass: titleHasKw,
+      detail: titleHasKw ? "Found “" + kw + "” in the title." : "“" + kw + "” isn't in the title yet." });
+
+    var idx = title.toLowerCase().indexOf(kw.toLowerCase());
+    var frontLoaded = titleHasKw && idx <= Math.ceil(title.length / 2);
+    checks.push({ id:"kw-front", label:"Keyword is front-loaded in the title", pass: frontLoaded,
+      detail: titleHasKw ? (frontLoaded ? "Keyword appears in the first half of the title." : "Keyword appears late — move it earlier for more weight.") : "Add the keyword to the title first." });
+  } else {
+    checks.push({ id:"kw-in-title", label:"Focus keyword appears in the title", info:true,
+      detail: "Add a focus keyword above to check this." });
+    checks.push({ id:"kw-front", label:"Keyword is front-loaded in the title", info:true,
+      detail: "Add a focus keyword above to check this." });
+  }
+
+  var hasCta = CTA_WORDS.some(function(w){ return desc.toLowerCase().indexOf(w) > -1; });
+  checks.push({ id:"cta", label:"Description includes a call-to-action", pass: !!desc && hasCta,
+    detail: hasCta ? "Found a call-to-action phrase." : "Try adding a verb like “learn”, “get” or “start”." });
+
+  if (title && desc){
+    var overlap = wordOverlapRatio(title, desc);
+    var notDuplicate = overlap < 0.75;
+    checks.push({ id:"no-dup", label:"Description isn't just a repeat of the title", pass: notDuplicate,
+      detail: notDuplicate ? "Title and description add different information." : "These overlap heavily — give the description its own angle." });
+  } else {
+    checks.push({ id:"no-dup", label:"Description isn't just a repeat of the title", info:true,
+      detail: "Fill in both the title and description to check this." });
+  }
+
+  checks.push({ id:"sitename", label:"Site name is filled in", pass: !!state.siteName.trim(),
+    detail: state.siteName.trim() ? "Site name set." : "Add a site name above." });
+
+  var urlObj = normalizeUrl(state.url);
+  checks.push({ id:"url-valid", label:"Page URL is valid", pass: !!urlObj,
+    detail: urlObj ? "Resolved to " + urlObj.hostname.replace(/^www\./, "") : "Enter a full URL, e.g. https://yoursite.com/page" });
+
+  return checks;
+}
+
+function renderChecks(){
+  var checks = computeChecks();
+  var list = $("checkList");
+  list.innerHTML = "";
+  var applicable = checks.filter(function(c){ return !c.info; });
+  var passed = applicable.filter(function(c){ return c.pass; }).length;
+  $("scoreNum").textContent = passed + " / " + applicable.length;
+
+  checks.forEach(function(c){
+    var row = document.createElement("div");
+    row.className = "check-row " + (c.info ? "info" : (c.pass ? "pass" : "fail"));
+    row.innerHTML =
+      "<div class='mark'>" + (c.info ? "i" : (c.pass ? "✓" : "✕")) + "</div>" +
+      "<div><div class='label'>" + escapeHtml(c.label) + "</div><div class='detail'>" + escapeHtml(c.detail) + "</div></div>";
+    list.appendChild(row);
+  });
+}
+
+/* ---------- meters ---------- */
+function setMeter(fillId, pxId, used, budget){
+  var pct = Math.min(100, (used / budget) * 100);
+  var fill = $(fillId);
+  fill.style.width = pct + "%";
+  fill.classList.remove("warn", "over");
+  if (used > budget) fill.classList.add("over");
+  else if (pct > 85) fill.classList.add("warn");
+  $(pxId).textContent = Math.round(used) + " / " + budget + "px";
+}
+
+/* ---------- main render ---------- */
+function renderPreview(){
+  var mock = $("serpMock");
+  mock.classList.toggle("mobile", state.device === "mobile");
+
+  var urlObj = normalizeUrl(state.url);
+  var hostname = urlObj ? urlObj.hostname.replace(/^www\./, "") : "example.com";
+  var segments = urlObj ? urlObj.pathname.split("/").filter(Boolean).map(humanizeSegment).filter(Boolean) : [];
+  var breadcrumb = hostname + (segments.length ? " › " + segments.join(" › ") : "");
+
+  $("serpFavicon").src = urlObj ? faviconUrl(hostname) : "";
+  $("serpFavicon").onerror = function(){ this.style.visibility = "hidden"; };
+  if (urlObj) $("serpFavicon").style.visibility = "visible";
+  $("serpBreadcrumb").textContent = breadcrumb;
+  $("serpSitename").textContent = state.siteName.trim() || hostname;
+
+  var titleBudget = state.device === "mobile" ? PX.titleMobile : PX.titleDesktop;
+  var descBudget = state.device === "mobile" ? PX.descMobile : PX.descDesktop;
+  var titleFont = (state.device === "mobile" ? "18px" : "20px") + " arial";
+  var descFont = "14px arial";
+
+  var titleEl = $("serpTitle");
+  if (state.title.trim()){
+    renderClipped(titleEl, state.title, titleFont, titleBudget, state.keyword);
+  } else {
+    titleEl.innerHTML = "<span class='serp-empty'>Your title tag will appear here</span>";
+  }
+
+  var descEl = $("serpDesc");
+  if (state.description.trim()){
+    renderClipped(descEl, state.description, descFont, descBudget, state.keyword);
+  } else {
+    descEl.innerHTML = "<span class='serp-empty'>Your meta description will appear here.</span>";
+  }
+
+  // meters always reflect both devices regardless of which is active in the mock
+  setMeter("titleDesktopFill", "titleDesktopPx", measure(state.title, "20px arial"), PX.titleDesktop);
+  setMeter("titleMobileFill", "titleMobilePx", measure(state.title, "18px arial"), PX.titleMobile);
+  setMeter("descDesktopFill", "descDesktopPx", measure(state.description, "14px arial"), PX.descDesktop);
+  setMeter("descMobileFill", "descMobilePx", measure(state.description, "14px arial"), PX.descMobile);
+
+  $("titleCount").textContent = state.title.length + " chars";
+  $("descCount").textContent = state.description.length + " chars";
+}
+
+function renderAll(){
+  renderPreview();
+  renderChecks();
+  renderVariants();
+}
+
+/* ---------- variants ---------- */
+function miniSerpHtml(v){
+  var urlObj = normalizeUrl(v.url);
+  var hostname = urlObj ? urlObj.hostname.replace(/^www\./, "") : "example.com";
+  var segments = urlObj ? urlObj.pathname.split("/").filter(Boolean).map(humanizeSegment).filter(Boolean) : [];
+  var breadcrumb = hostname + (segments.length ? " › " + segments.join(" › ") : "");
+  var titleR = cutoffIndex(v.title || "", "20px arial", PX.titleDesktop);
+  var descR = cutoffIndex(v.description || "", "14px arial", PX.descDesktop);
+  var titleHtml = boldKeyword(escapeHtml((v.title||"").slice(0, titleR.cut)), v.keyword) + (titleR.truncated ? "…" : "");
+  var descHtml = boldKeyword(escapeHtml((v.description||"").slice(0, descR.cut)), v.keyword) + (descR.truncated ? "…" : "");
+  return (
+    "<div class='serp-mock'>" +
+      "<div class='serp-row'>" +
+        "<img class='serp-favicon' src='" + (urlObj ? faviconUrl(hostname) : "") + "' onerror=\"this.style.visibility='hidden'\">" +
+        "<div class='serp-sitecol'>" +
+          "<span class='serp-sitename'>" + escapeHtml(v.siteName || hostname) + "</span>" +
+          "<span class='serp-breadcrumb'>" + escapeHtml(breadcrumb) + "</span>" +
+        "</div>" +
+      "</div>" +
+      "<div class='serp-title'>" + (titleHtml || "<span class='serp-empty'>No title</span>") + "</div>" +
+      "<div class='serp-desc'>" + (descHtml || "<span class='serp-empty'>No description</span>") + "</div>" +
+    "</div>"
+  );
+}
+
+function renderVariants(){
+  var grid = $("variantGrid");
+  var empty = $("variantEmpty");
+  grid.innerHTML = "";
+  if (!state.variants.length){ empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  state.variants.forEach(function(v){
+    var card = document.createElement("div");
+    card.className = "variant-card";
+    card.innerHTML =
+      "<div class='variant-head'>" +
+        "<span class='variant-name'>" + escapeHtml(v.name) + "</span>" +
+        "<div class='variant-actions'>" +
+          "<button type='button' class='load-btn' title='Load into editor'>↺</button>" +
+          "<button type='button' class='del-btn' title='Delete'>✕</button>" +
+        "</div>" +
+      "</div>" +
+      miniSerpHtml(v);
+    card.querySelector(".load-btn").addEventListener("click", function(){
+      state.url = v.url; state.siteName = v.siteName; state.keyword = v.keyword;
+      state.title = v.title; state.description = v.description;
+      syncInputsFromState();
+      save(); renderAll();
+    });
+    card.querySelector(".del-btn").addEventListener("click", function(){
+      state.variants = state.variants.filter(function(x){ return x.id !== v.id; });
+      save(); renderVariants();
+    });
+    grid.appendChild(card);
+  });
+}
+
+function syncInputsFromState(){
+  $("url").value = state.url;
+  $("siteName").value = state.siteName;
+  $("keyword").value = state.keyword;
+  $("title").value = state.title;
+  $("description").value = state.description;
+}
+
+/* ---------- wiring ---------- */
+function bindField(id, key){
+  $(id).addEventListener("input", function(){
+    state[key] = $(id).value;
+    save();
+    renderAll();
+  });
+}
+
+function init(){
+  load();
+  syncInputsFromState();
+  renderAll();
+
+  bindField("url", "url");
+  bindField("siteName", "siteName");
+  bindField("keyword", "keyword");
+  bindField("title", "title");
+  bindField("description", "description");
+
+  $("deviceToggle").addEventListener("click", function(ev){
+    var btn = ev.target.closest("button[data-device]");
+    if (!btn) return;
+    state.device = btn.getAttribute("data-device");
+    Array.from($("deviceToggle").children).forEach(function(b){ b.classList.toggle("active", b === btn); });
+    renderPreview();
+  });
+
+  $("copyMetaBtn").addEventListener("click", function(){
+    var html = "<title>" + state.title + "</title>\n<meta name=\"description\" content=\"" + state.description.replace(/"/g, "&quot;") + "\">";
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(html).catch(function(){});
+    }
+    var btn = $("copyMetaBtn");
+    var old = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(function(){ btn.textContent = old; }, 1300);
+  });
+
+  $("resetBtn").addEventListener("click", function(){
+    if (!confirm("Clear the URL, title, description and keyword? Saved variants are kept.")) return;
+    state.url = ""; state.siteName = ""; state.keyword = ""; state.title = ""; state.description = "";
+    syncInputsFromState();
+    save(); renderAll();
+  });
+
+  $("saveVariantBtn").addEventListener("click", function(){
+    var name = prompt("Name this variant (e.g. \"Keyword-first title\"):", "Variant " + (state.variants.length + 1));
+    if (name === null) return;
+    name = name.trim() || ("Variant " + (state.variants.length + 1));
+    state.variants.push({
+      id: "v" + Date.now(),
+      name: name,
+      url: state.url, siteName: state.siteName, keyword: state.keyword,
+      title: state.title, description: state.description
+    });
+    save();
+    renderVariants();
+  });
+
+  document.querySelectorAll("footer a").forEach(function(a){ a.rel = "noopener noreferrer"; });
+}
+
+init();
+})();
+</script>
+</body>
+</html>
